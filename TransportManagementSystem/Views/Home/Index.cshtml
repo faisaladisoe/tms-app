@@ -1,0 +1,109 @@
+﻿@{
+    ViewData["Title"] = "TMS Dashboard";
+}
+
+@model Dashboard
+
+<div class="container mt-4">
+
+    <!-- Shipment Route Input -->
+    <form method="get" asp-action="Index" autocomplete="off">
+        <div class="form-group mb-3">
+            <label for="shipmentRoute" class="form-label fw-bold">Shipment Route:</label>
+            <input type="text" id="shipmentRoute" name="shipmentRoute"
+                   class="form-control" placeholder="Select shipment route"
+                   list="routes" />
+        </div>
+        <button type="submit" class="btn btn-primary">Find The Cheapest Truck</button>
+    </form>
+    
+    @if (Model != null && Model.Truck != null)
+    {
+        <!-- Truck Info -->
+        <div class="bg-primary text-white mt-3 p-3 rounded mb-3">
+            <h5>Cheapest Truck Info</h5>
+            <ul>
+                <li><strong>Expedition:</strong> @Model.Truck.Expedition?.Name</li>
+                <li><strong>Type:</strong> @Model.Truck.Type</li>
+                <li><strong>Tonnage:</strong> @Model.Truck.Tonnage</li>
+                <li><strong>Volume:</strong> @Model.Truck.Volume</li>
+            </ul>
+        </div>
+
+        <!-- Remaining Capacity -->
+        <div class="bg-info text-white p-3 rounded mb-3">
+            <div>
+                <strong>Remaining Tonnage:</strong> @Model.RemainingTruckTonnage kg(s)
+            </div>
+            <div>
+                <strong>Remaining Volume:</strong> @Model.RemainingTruckVolume pallet(s)
+            </div>
+        </div>
+
+        <!-- Product Input -->
+        <form method="get" asp-action="Index" autocomplete="off">
+            <input type="hidden" name="shipmentRoute" value="@Context.Request.Query["shipmentRoute"]" />
+            <div class="form-group mb-3 d-flex">
+                <input type="text" name="productCode" class="form-control me-2" placeholder="Enter product code" />
+                <input type="number" name="quantity" class="form-control me-2"
+                       placeholder="Qty" min="1" value="1" style="max-width:120px;" />
+                <button type="submit" class="btn btn-primary">Load Product</button>
+            </div>
+        </form>
+
+        <!-- Loaded Products -->
+        <h5>Loaded Products</h5>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Size</th>
+                    <th>Dimension</th>
+                    <th>Box per pallet</th>
+                    <th>Gross Weight</th>
+                    <th>Quantity</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var p in Model.Products)
+                {
+                    <tr>
+                        <td>@p.Product.Code</td>
+                        <td>@p.Product.Description</td>
+                        <td>@p.Product.Size</td>
+                        <td>@p.Product.Dimension</td>
+                        <td>@p.Product.BoxPerPallet</td>
+                        <td>@p.Product.GrossWeight</td>
+                        <td>@p.Quantity</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>
+
+@section Scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css" />
+
+    <script>
+        $(function () {
+            $("#shipmentRoute").autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        url: '/Home/SearchRoutes',
+                        data: { term: request.term },
+                        success: function (data) {
+                            response(data);
+                        }
+                    });
+                },
+                minLength: 2 // start suggesting after 2 chars
+            });
+        });
+    </script>
+}
+
+

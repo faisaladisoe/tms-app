@@ -1,0 +1,27 @@
+services:
+  tms-web:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - "5000:8080"
+    depends_on:
+      - tms-db
+    environment:
+      - ConnectionStrings__Default=Host=tms-db;Port=5432;Database=tms;Username=tms;Password=tms
+
+  tms-db:
+    image: postgres:18
+    container_name: tms-db
+    restart: always
+    environment:
+      POSTGRES_USER: tms
+      POSTGRES_PASSWORD: tms
+      POSTGRES_DB: tms
+    ports:
+      - "5432:5432"
+    volumes:
+      - tms-data:/var/lib/postgresql/data
+
+volumes:
+  tms-data:
