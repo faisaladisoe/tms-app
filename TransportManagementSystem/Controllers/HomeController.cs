@@ -36,7 +36,7 @@ public class HomeController : Controller
 
             if (route != null)
             {
-                // Find cheapest operation (truck cost per km)
+                // Find cheapest operation (truck cost per kg)
                 var cheapestTruck = await _context.Operations
                     .Include(o => o.Expedition).ThenInclude(e => e.Trucks)
                     .Where(o => o.RouteId == route.Id)

@@ -10,7 +10,7 @@ namespace TransportManagementSystem.Models
         [Display(Name = "Tonnage (kg)")]
         public required float Tonnage { get; set; }
 
-        [Display(Name = "Volume (m³)")]
+        [Display(Name = "Volume (pallet)")]
         public required float Volume { get; set; }
 
         // Foreign Key

@@ -6,7 +6,7 @@ namespace TransportManagementSystem.Models
     {
         public int Id { get; set; }
 
-        [Display(Name = "Rate per km (Rupiah)")]
+        [Display(Name = "Rate per kg (Rupiah)")]
         public required float Rate { get; set; }
 
         // Foreign Keys
