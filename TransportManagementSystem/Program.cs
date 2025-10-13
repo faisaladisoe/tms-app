@@ -33,11 +33,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<TmsDbContext>();
-    db.Database.Migrate(); // applies any pending migrations
-}
-
 
 app.Run();
