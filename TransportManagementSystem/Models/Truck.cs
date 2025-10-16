@@ -5,17 +5,22 @@ namespace TransportManagementSystem.Models
     public class Truck
     {
         public int Id { get; set; }
-        public required string Type { get; set; }
-        
-        [Display(Name = "Tonnage (kg)")]
-        public required float Tonnage { get; set; }
 
+        [Required]
+        public string Type { get; set; } = string.Empty;
+
+        [Required]
+        [Display(Name = "Tonnage (kg)")]
+        public float Tonnage { get; set; } = 0;
+
+        [Required]
         [Display(Name = "Volume (pallet)")]
-        public required float Volume { get; set; }
+        public float Volume { get; set; } = 0;
 
         // Foreign Key
+        [Required]
         [Display(Name = "Expedition")]
-        public required int ExpeditionId { get; set; }
+        public int ExpeditionId { get; set; } = 0;
 
         // Navigation
         public Expedition? Expedition { get; set; }

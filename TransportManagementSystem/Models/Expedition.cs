@@ -1,9 +1,13 @@
-﻿namespace TransportManagementSystem.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace TransportManagementSystem.Models
 {
     public class Expedition
     {
         public int Id { get; set; }
-        public required string Name { get; set; }
+
+        [Required]
+        public string Name { get; set; } = string.Empty;
 
         // Navigation
         public ICollection<Truck> Trucks { get; set; } = new List<Truck>();

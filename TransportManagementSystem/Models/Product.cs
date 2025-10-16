@@ -6,22 +6,28 @@ namespace TransportManagementSystem.Models
     {
         public int Id { get; set; }
 
+        [Required]
         [Display(Name = "Material number")]
-        public required string Code { get; set; }
+        public string Code { get; set; } = string.Empty;
 
+        [Required]
         [Display(Name = "Material description")]
-        public required string Description { get; set; }
+        public string Description { get; set; } = string.Empty;
 
+        [Required]
         [Display(Name = "Material size (length x width)")]
-        public required string Size { get; set; }
+        public string Size { get; set; } = string.Empty;
 
+        [Required]
         [Display(Name = "Dimension (m³)")]
-        public required float Dimension { get; set; }
+        public float Dimension { get; set; } = 0;
 
+        [Required]
         [Display(Name = "Box per pallet (qty)")]
-        public required int BoxPerPallet { get; set; }
+        public int BoxPerPallet { get; set; } = 0;
 
+        [Required]
         [Display(Name = "Gross weight (kg)")]
-        public required float GrossWeight { get; set; }
+        public float GrossWeight { get; set; } = 0;
     }
 }

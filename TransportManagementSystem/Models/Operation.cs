@@ -6,15 +6,18 @@ namespace TransportManagementSystem.Models
     {
         public int Id { get; set; }
 
+        [Required]
         [Display(Name = "Rate per kg (Rupiah)")]
-        public required float Rate { get; set; }
+        public float Rate { get; set; } = 0;
 
         // Foreign Keys
+        [Required]
         [Display(Name = "Expedition")]
-        public required int ExpeditionId { get; set; }
+        public int ExpeditionId { get; set; } = 0;
 
+        [Required]
         [Display(Name = "Route name")]
-        public required int RouteId { get; set; }
+        public int RouteId { get; set; } = 0;
 
         // Navigation
         public Expedition? Expedition { get; set; }
