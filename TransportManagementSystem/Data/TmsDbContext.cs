@@ -14,6 +14,64 @@ namespace TransportManagementSystem.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Expedition model
+            modelBuilder.Entity<Expedition>(e =>
+            {
+                e.Property(p => p.Name).IsRequired();
+
+                e.HasIndex(p => p.Id);
+                e.HasIndex(p => p.Name).IsUnique();
+            });
+
+            // Truck model
+            modelBuilder.Entity<Truck>(e =>
+            {
+                e.Property(p => p.Type).IsRequired();
+                e.Property(p => p.Tonnage).IsRequired();
+                e.Property(p => p.Volume).IsRequired();
+                e.Property(p => p.ExpeditionId).IsRequired();
+
+                e.HasIndex(p => p.Id);
+                e.HasIndex(p => p.Type).IsUnique();
+            });
+
+            // Route model
+            modelBuilder.Entity<Models.Route>(e =>
+            {
+                e.Property(p => p.Name).IsRequired();
+                e.Property(p => p.Abbr).IsRequired();
+                e.Property(p => p.Distance).IsRequired();
+
+                e.HasIndex(p => p.Id);
+                e.HasIndex(p => new { p.Name, p.Abbr }).IsUnique();
+                e.HasIndex(p => p.Name).IsUnique();
+                e.HasIndex(p => p.Abbr).IsUnique();
+            });
+
+            // Operation model
+            modelBuilder.Entity<Operation>(e =>
+            {
+                e.Property(p => p.Rate).IsRequired();
+                e.Property(p => p.ExpeditionId).IsRequired();
+                e.Property(p => p.RouteId).IsRequired();
+
+                e.HasIndex(p => p.Id);
+            });
+
+            // Product model
+            modelBuilder.Entity<Product>(e =>
+            {
+                e.Property(p => p.Code).IsRequired();
+                e.Property(p => p.Description).IsRequired();
+                e.Property(p => p.Size).IsRequired();
+                e.Property(p => p.Dimension).IsRequired();
+                e.Property(p => p.BoxPerPallet).IsRequired();
+                e.Property(p => p.GrossWeight).IsRequired();
+
+                e.HasIndex(p => p.Id);
+                e.HasIndex(p => p.Code).IsUnique();
+            });
             
             // Expedition -> Truck (one-to-many, 1:N)
             modelBuilder.Entity<Models.Expedition>()

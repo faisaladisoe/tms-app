@@ -4,6 +4,7 @@ namespace TransportManagementSystem.Models
 {
     public class Truck
     {
+        [Key]
         public int Id { get; set; }
 
         [Required]
