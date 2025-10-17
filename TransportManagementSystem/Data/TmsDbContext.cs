@@ -56,6 +56,7 @@ namespace TransportManagementSystem.Data
                 e.Property(p => p.RouteId).IsRequired();
 
                 e.HasIndex(p => p.Id);
+                e.HasIndex(p => new { p.ExpeditionId, p.RouteId }).IsUnique();
             });
 
             // Product model
@@ -92,11 +93,6 @@ namespace TransportManagementSystem.Data
                 .WithOne(o => o.Route)
                 .HasForeignKey(o => o.RouteId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // Operation composite key (ExpeditionId, RouteId)
-            modelBuilder.Entity<Operation>()
-                .HasIndex(o => new { o.ExpeditionId, o.RouteId })
-                .IsUnique();
 
             // Explicit FK constraints
             modelBuilder.Entity<Operation>()
