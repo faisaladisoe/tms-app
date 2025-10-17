@@ -11,28 +11,38 @@ namespace TransportManagementSystem.Helpers
             if (!ImportValidationRules.Rules.TryGetValue(type, out var rules))
                 return errors;
 
+            // Row starts from number two.
+            var indexedItems = items.Select((item, index) => new { Item = item, Row = index + 2 }).ToList();
+
             // Required fields
-            int rowRequired = 1;
-            foreach (var item in items)
+            foreach (var x in indexedItems)
             {
                 foreach (var req in rules.Required)
                 {
-                    var val = type.GetProperty(req)?.GetValue(item);
+                    var val = type.GetProperty(req)?.GetValue(x.Item);
                     if (val == null || (val is string s && string.IsNullOrWhiteSpace(s)))
-                        errors.Add($"{type.Name} Row {rowRequired}: {req} is required");
+                        errors.Add($"{type.Name} Row {x.Row}: {req} is required");
                 }
-                rowRequired++;
             }
 
+            // Build hash sets for each unique set
+            var dbItems = context.Set<T>().AsNoTracking().ToList();
+            var dbKeySets = rules.UniqueSets.ToDictionary(
+                uniqSet => uniqSet,
+                uniqSet => new HashSet<string>(
+                    dbItems.Select(dbItem =>
+                        string.Join("|", uniqSet.Select(p =>
+                            type.GetProperty(p)?.GetValue(dbItem)?.ToString() ?? "")))
+                )
+            );
+
             // Uniqueness (single or composite)
-            var dbSet = context.Set<T>();
-            var dbItems = dbSet.AsNoTracking().ToList();
-            var indexedItems = items.Select((item, index) => new { Item = item, Row = index + 2 }).ToList();
             foreach (var uniqSet in rules.UniqueSets)
             {
                 // Check duplicates within Excel
                 var duplicates = indexedItems
-                    .GroupBy(x => string.Join("|", uniqSet.Select(p => type.GetProperty(p)?.GetValue(x.Item)?.ToString() ?? "")))
+                    .GroupBy(x => string.Join("|", uniqSet.Select(p =>
+                        type.GetProperty(p)?.GetValue(x.Item)?.ToString() ?? "")))
                     .Where(g => g.Count() > 1);
 
                 foreach (var dup in duplicates)
@@ -42,20 +52,12 @@ namespace TransportManagementSystem.Helpers
                 }
 
                 // Check conflicts against DB
-                foreach (var item in indexedItems)
+                foreach (var x in indexedItems)
                 {
-                    var keyValues = uniqSet.Select(p => type.GetProperty(p)?.GetValue(item.Item)).ToArray();
-
-                    var exists = dbItems.Any(dbItem =>
-                        uniqSet.All(p =>
-                            Equals(type.GetProperty(p)?.GetValue(dbItem),
-                                   type.GetProperty(p)?.GetValue(item.Item))));
-
-                    if (exists)
-                    {
-                        var formatted = string.Join(", ", uniqSet.Select((p, i) => $"{p}={keyValues[i]}"));
-                        errors.Add($"{type.Name} Row {item.Row}: Combination already exists in DB for {formatted}");
-                    }
+                    var key = string.Join("|", uniqSet.Select(p =>
+                        type.GetProperty(p)?.GetValue(x.Item)?.ToString() ?? ""));
+                    if (dbKeySets[uniqSet].Contains(key))
+                        errors.Add($"{type.Name} Row {x.Row}: Combination already exists in DB for {string.Join(", ", uniqSet)} = {key}");
                 }
             }
 
