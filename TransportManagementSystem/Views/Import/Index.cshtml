@@ -1,0 +1,39 @@
+﻿@{
+    ViewData["Title"] = "Bulk Import";
+}
+
+<h2>Bulk Import</h2>
+
+<form asp-action="ImportAll" asp-controller="Import" method="post" enctype="multipart/form-data">
+    <div class="form-group">
+        <label for="file">Upload Excel File</label>
+        <input type="file" name="file" id="file" class="form-control" />
+    </div>
+    <button type="submit" class="btn btn-primary mt-2">Import All Data</button>
+</form>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success mt-3">@TempData["Success"]</div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+}
+
+@if (TempData["Errors"] != null)
+{
+    var errors = TempData["Errors"] as List<string>;
+    <div class="alert alert-danger mt-3">
+        @if (errors != null)
+        {
+            <ul>
+                @foreach (var err in errors)
+                {
+                    <li>@err</li>
+                }
+            </ul>
+        }
+    </div>
+}
