@@ -1,3 +1,4 @@
+using OfficeOpenXml;
 using Microsoft.EntityFrameworkCore;
 using TransportManagementSystem.Data;
 
@@ -32,6 +33,8 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+ExcelPackage.License.SetNonCommercialPersonal("Faisal Soesatyo");
 
 
 app.Run();
