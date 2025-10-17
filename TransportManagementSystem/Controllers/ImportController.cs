@@ -78,7 +78,7 @@ namespace TransportManagementSystem.Controllers
                 var route = _context.Routes.FirstOrDefault(r => r.Name == routeName);
                 if (route == null)
                 {
-                    errors.Add($"Route '{routeName}' not found");
+                    errors.Add($"Route '{routeName}' is not found");
                     continue;
                 }
 
@@ -91,7 +91,7 @@ namespace TransportManagementSystem.Controllers
                     var expedition = _context.Expeditions.FirstOrDefault(e => e.Name == expeditionName);
                     if (expedition == null)
                     {
-                        errors.Add($"Expedition '{expeditionName}' not found for route '{routeName}'");
+                        errors.Add($"Expedition '{expeditionName}' is not found for route '{routeName}'");
                         continue;
                     }
 

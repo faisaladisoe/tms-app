@@ -1,4 +1,6 @@
 ﻿using OfficeOpenXml;
+using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Reflection;
 
 namespace TransportManagementSystem.Helpers
@@ -13,10 +15,23 @@ namespace TransportManagementSystem.Helpers
             // Map headers
             for (int col = 1; col <= ws.Dimension.Columns; col++)
             {
-                var header = ws.Cells[1, col].Text;
-                var prop = props.FirstOrDefault(p => p.Name.Equals(header, StringComparison.OrdinalIgnoreCase));
-                if (prop != null)
-                    headers[col] = prop;
+                TextInfo textInfo = CultureInfo.CurrentCulture.TextInfo;
+                var header = ws.Cells[1, col].Text.Trim();
+                var capitalizedHeader = textInfo.ToTitleCase(header);
+                var normalizedHeader = string.Join("", capitalizedHeader.Split());
+
+                foreach (var prop in props)
+                {
+                    var displayAttr = prop.GetCustomAttribute<DisplayAttribute>();
+                    var displayName = displayAttr?.Name ?? prop.Name;
+
+                    if (string.Equals(normalizedHeader, displayName, StringComparison.OrdinalIgnoreCase) || 
+                        string.Equals(normalizedHeader, prop.Name, StringComparison.OrdinalIgnoreCase))
+                    {
+                        headers[col] = prop;
+                        break;
+                    }
+                }
             }
 
             var list = new List<T>();
