@@ -40,7 +40,7 @@ namespace TransportManagementSystem.Helpers
                 var obj = Activator.CreateInstance<T>()!;
                 foreach (KeyValuePair<int, PropertyInfo> kvp in headers)
                 {
-                    var cellValue = ws.Cells[row, kvp.Key].Text;
+                    var cellValue = ws.Cells[row, kvp.Key].Text.Trim();
                     if (!string.IsNullOrEmpty(cellValue))
                     {
                         var targetType = Nullable.GetUnderlyingType(kvp.Value.PropertyType) ?? kvp.Value.PropertyType;

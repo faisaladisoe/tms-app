@@ -42,6 +42,27 @@ namespace TransportManagementSystem.Controllers
             errors.AddRange(ImportValidator.Validate(routes, _context));
             errors.AddRange(ImportValidator.Validate(products, _context));
 
+            // Expeditions, Routes, Products
+            if (errors.Count > 0)
+                return BadRequest(new { Errors = errors });
+            errors.Clear();
+            using (var tx = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    _context.Expeditions.AddRange(expeditions);
+                    _context.Routes.AddRange(routes);
+                    _context.Products.AddRange(products);
+                    await _context.SaveChangesAsync();
+                    await tx.CommitAsync();
+                }
+                catch
+                {
+                    await tx.RollbackAsync();
+                    throw;
+                }
+            }
+
             var trucks = new List<Truck>();
             var trucksDto = ImportHelper.ReadSheet<TruckImportDto>(package.Workbook.Worksheets["Trucks"]);
             foreach (var dto in trucksDto)
@@ -62,6 +83,25 @@ namespace TransportManagementSystem.Controllers
                 });
             }
             errors.AddRange(ImportValidator.Validate(trucks, _context));
+
+            // Trucks
+            if (errors.Count > 0)
+                return BadRequest(new { Errors = errors });
+            errors.Clear();
+            using (var tx = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    _context.Trucks.AddRange(trucks);
+                    await _context.SaveChangesAsync();
+                    await tx.CommitAsync();
+                }
+                catch
+                {
+                    await tx.RollbackAsync();
+                    throw;
+                }
+            }
 
             var operations = new List<Operation>();
             var ws = package.Workbook.Worksheets["Operations"];
@@ -113,28 +153,24 @@ namespace TransportManagementSystem.Controllers
                     });
                 }
             }
-
             errors.AddRange(ImportValidator.Validate(operations, _context));
 
-            if (errors.Any())
+            // Operations
+            if (errors.Count > 0)
                 return BadRequest(new { Errors = errors });
-
-            using var tx = await _context.Database.BeginTransactionAsync();
-            try
+            using (var tx = await _context.Database.BeginTransactionAsync())
             {
-                _context.Expeditions.AddRange(expeditions);
-                _context.Trucks.AddRange(trucks);
-                _context.Routes.AddRange(routes);
-                _context.Operations.AddRange(operations);
-                _context.Products.AddRange(products);
-
-                await _context.SaveChangesAsync();
-                await tx.CommitAsync();
-            }
-            catch
-            {
-                await tx.RollbackAsync();
-                throw;
+                try
+                {
+                    _context.Operations.AddRange(operations);
+                    await _context.SaveChangesAsync();
+                    await tx.CommitAsync();
+                }
+                catch
+                {
+                    await tx.RollbackAsync();
+                    throw;
+                }
             }
 
             return Ok("All data imported successfully");

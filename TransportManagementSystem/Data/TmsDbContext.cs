@@ -33,7 +33,6 @@ namespace TransportManagementSystem.Data
                 e.Property(p => p.ExpeditionId).IsRequired();
 
                 e.HasIndex(p => p.Id);
-                e.HasIndex(p => p.Type).IsUnique();
             });
 
             // Route model
