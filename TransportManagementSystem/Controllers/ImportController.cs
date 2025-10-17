@@ -29,6 +29,20 @@ namespace TransportManagementSystem.Controllers
         [HttpPost]
         public async Task<IActionResult> ImportAll(IFormFile file)
         {
+            if (file == null || file.Length == 0)
+            {
+                TempData["Error"] = "Please upload a valid Excel file.";
+                return RedirectToAction("Index");
+            }
+
+            string[] allowedExtensions = { ".xlsx", ".xls" };
+            var extension = Path.GetExtension(file.FileName);
+            if (!Array.Exists(allowedExtensions, item => item == extension))
+            {
+                TempData["Error"] = "Only Excel files (.xlsx, .xls) are supported.";
+                return RedirectToAction("Index");
+            }
+
             using var stream = new MemoryStream();
             await file.CopyToAsync(stream);
             using var package = new ExcelPackage(stream);
@@ -173,7 +187,32 @@ namespace TransportManagementSystem.Controllers
                 }
             }
 
-            return Ok("All data imported successfully");
+            TempData["Success"] = "All data imported successfully";
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ClearAll()
+        {
+            try
+            {
+                _context.Operations.RemoveRange(_context.Operations);
+                _context.Trucks.RemoveRange(_context.Trucks);
+                _context.Products.RemoveRange(_context.Products);
+                _context.Routes.RemoveRange(_context.Routes);
+                _context.Expeditions.RemoveRange(_context.Expeditions);
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = "All data has been cleared successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Failed to clear data: {ex.Message}";
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }

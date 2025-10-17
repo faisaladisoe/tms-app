@@ -4,24 +4,42 @@
 
 <h2>Bulk Import</h2>
 
+<!-- Import Form -->
 <form asp-action="ImportAll" asp-controller="Import" method="post" enctype="multipart/form-data">
     <div class="form-group">
         <label for="file">Upload Excel File</label>
-        <input type="file" name="file" id="file" class="form-control" />
+        <input type="file" name="file" id="file" class="form-control"
+               required accept=".xlsx,.xls" />
     </div>
     <button type="submit" class="btn btn-primary mt-2">Import All Data</button>
 </form>
+
+<!-- Danger Zone -->
+<div class="card border-danger mt-4">
+    <div class="card-header bg-danger text-white">
+        Danger Zone
+    </div>
+    <div class="card-body">
+        <p class="card-text">
+            Clearing all data will permanently delete every record in the system.
+            This action cannot be undone.
+        </p>
+        <form asp-action="ClearAll" asp-controller="Import" method="post"
+              onsubmit="return confirm('Are you absolutely sure you want to clear ALL data? This cannot be undone.');">
+            <button type="submit" class="btn btn-danger">Clear All Data</button>
+        </form>
+    </div>
+</div>
+
 
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success mt-3">@TempData["Success"]</div>
 }
-
 @if (TempData["Error"] != null)
 {
     <div class="alert alert-danger mt-3">@TempData["Error"]</div>
 }
-
 @if (TempData["Errors"] != null)
 {
     var errors = TempData["Errors"] as List<string>;
