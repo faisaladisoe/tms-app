@@ -9,30 +9,80 @@
 <!-- Total Capacity -->
 <div class="bg-primary bg-gradient text-white p-3 rounded mb-3">
     <div>
-        <strong>Total Tonnage:</strong> @Math.Round(@Model.TotalWeight, 3) kg(s)
+        <strong>Total Tonnage:</strong> @Math.Round(@Model.TotalWeight, 3) kg
     </div>
     <div>
-        <strong>Total Volume:</strong> @Math.Round(@Model.TotalVolume, 3) pallet(s)
+        <strong>Total Volume:</strong> @Math.Round(@Model.TotalVolume, 3) pallets
     </div>
     <div>
-        <strong>Total Quantity:</strong> @Math.Round(@Model.TotalQuantity, 3) item(s)
+        <strong>Total Quantity:</strong> @Math.Round(@Model.TotalQuantity, 3) items
     </div>
 </div>
 
-<!-- Product Input -->
-<form method="post" asp-action="AddProduct" autocomplete="off">
-    <div class="form-group mb-3 d-flex">
-        <input type="text" name="productCode" class="form-control me-2" placeholder="Enter product code" />
-        <input type="number" name="quantity" class="form-control me-2"
-               placeholder="Qty" min="1" value="1" style="max-width:120px;" />
-        <button type="submit" class="btn btn-primary">Load Product</button>
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success mt-3">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+}
+@if (TempData["Errors"] != null)
+{
+    var errors = TempData["Errors"] as List<string>;
+    <div class="alert alert-danger mt-3">
+        @if (errors != null)
+        {
+            <ul>
+                @foreach (var err in errors)
+                {
+                    <li>@err</li>
+                }
+            </ul>
+        }
     </div>
-</form>
+}
+
+<ul class="nav nav-tabs" id="dataEntryTabs" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" id="manual-tab" data-bs-toggle="tab" href="#manual" role="tab">Manual Entry</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" id="upload-tab" data-bs-toggle="tab" href="#upload" role="tab">Upload File</a>
+    </li>
+</ul>
+
+<div class="tab-content mt-3">
+    <!-- Product Input -->
+    <div class="tab-pane fade show active" id="manual" role="tabpanel">
+        <!-- Manual Input -->
+        <form method="post" asp-action="AddProduct" autocomplete="off">
+            @Html.AntiForgeryToken()
+            <div class="form-group mb-3 d-flex">
+                <input type="text" name="productCode" class="form-control me-2" placeholder="Enter product code" />
+                <input type="number" name="quantity" class="form-control me-2"
+                       placeholder="Qty" min="1" value="1" style="max-width:120px;" />
+                <button type="submit" class="btn btn-primary">Load Product</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="tab-pane fade" id="upload" role="tabpanel">
+        <!-- Upload File -->
+        <form asp-action="ImportData" method="post" enctype="multipart/form-data">
+            @Html.AntiForgeryToken()
+            <div class="form-group mb-2">
+                <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required />
+            </div>
+            <button type="submit" class="btn btn-primary mt-1">Upload Excel</button>
+        </form>
+    </div>
+</div>
 
 @if (Model.Products.Any())
 {
     <!-- Loaded Products -->
-    <h5>Loaded Products</h5>
+    <h5 class="mt-3">Loaded Products</h5>
     <table class="table">
         <thead>
             <tr>
@@ -61,15 +111,24 @@
         </tbody>
     </table>
 
-    <!-- Route Input -->
-    <form method="get" asp-action="Index" autocomplete="off">
-        <div class="form-group mb-3">
-            <label for="shipmentRoute" class="form-label fw-bold">Shipment Route:</label>
-            <input type="text" id="shipmentRoute" name="shipmentRoute"
-                   class="form-control" placeholder="Select shipment route" />
-        </div>
-        <button type="submit" class="btn btn-primary">Find Ideal Trucks</button>
+    <!-- Clear Products Button -->
+    <form asp-action="ClearProducts" method="post" class="mt-2"
+          onsubmit="return confirm('Are you sure you want to clear all products?');">
+        @Html.AntiForgeryToken()
+        <button type="submit" class="btn btn-danger">Clear All Products</button>
     </form>
+
+    <!-- Route Input -->
+    <div class="mt-3">
+        <form method="get" asp-action="Index" autocomplete="off">
+            <div class="form-group mb-3">
+                <label for="shipmentRoute" class="form-label fw-bold">Shipment Route:</label>
+                <input type="text" id="shipmentRoute" name="shipmentRoute"
+                       class="form-control" placeholder="Select shipment route" />
+            </div>
+            <button type="submit" class="btn btn-primary">Find Ideal Trucks</button>
+        </form>
+    </div>
 }
 
 <!-- Suggested Trucks -->
@@ -96,9 +155,9 @@
                 <th>Expedition</th>
                 <th>Type</th>
                 <th>Tonnage</th>
-                <th>Tonnage Fit</th>
+                <th>Remaining Tonnage</th>
                 <th>Volume</th>
-                <th>Volume Fit</th>
+                <th>Remaining Volume</th>
                 <th>Rate</th>
                 <th>Total Rate</th>
             </tr>
