@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
 using TransportManagementSystem.Data;
+using TransportManagementSystem.Helpers;
 using TransportManagementSystem.Models;
 
 namespace TransportManagementSystem.Controllers;
@@ -17,57 +18,74 @@ public class HomeController : Controller
         _logger = logger;
     }
 
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddProduct(string productCode, int quantity = 1)
+    {
+        var dashboard = HttpContext.Session.GetObject<Dashboard>("Dashboard") ?? new Dashboard();
+
+        var product = await _context.Products.FirstOrDefaultAsync(p => p.Code == productCode);
+        if (product != null)
+        {
+            dashboard.Products.Add(new LoadedProduct 
+            { 
+                Product = product, 
+                Quantity = quantity 
+            });
+            dashboard.TotalQuantity += quantity;
+            HttpContext.Session.SetObject("Dashboard", dashboard);
+        }
+
+        return RedirectToAction("Index"); // no query params, safe to refresh
+    }
+
     [HttpGet]
     public async Task<IActionResult> Index(string? shipmentRoute, string? productCode, int quantity = 1)
     {
-        var viewModel = new Dashboard();
+        // Load dashboard from session
+        var viewModel = HttpContext.Session.GetObject<Dashboard>("Dashboard") ?? new Dashboard();
 
-        var routes = await _context.Routes
-            .OrderBy(r => r.Name)
-            .ToListAsync();
-        ViewBag.Routes = routes;
-
+        // If route is chosen, suggest trucks
         if (!string.IsNullOrEmpty(shipmentRoute))
         {
-            // Find route
-            var route = await _context.Routes
-                .FirstOrDefaultAsync(r => r.Name == shipmentRoute);
-
+            var route = await _context.Routes.FirstOrDefaultAsync(r => r.Name == shipmentRoute);
             if (route != null)
             {
-                // Find cheapest operation (truck cost per kg)
-                var cheapestTruck = await _context.Operations
+                viewModel.ShipmentRoute = route;
+
+                var operations = await _context.Operations
                     .Include(o => o.Expedition).ThenInclude(e => e.Trucks)
                     .Where(o => o.RouteId == route.Id)
-                    .OrderBy(o => o.Rate)
-                    .FirstOrDefaultAsync();
+                    .ToListAsync();
 
-                if (cheapestTruck != null)
-                {
-                    var truck = cheapestTruck.Expedition.Trucks.FirstOrDefault();
-                    if (truck != null)
+                var allTruckOps = operations
+                    .SelectMany(o => o.Expedition.Trucks.Select(t => new 
+                    { 
+                        Operation = o, Truck = t 
+                    }))
+                    .ToList();
+
+                // Compute fit score: prioritize tonnage, then volume
+                var demandWeight = viewModel.TotalWeight;
+                var demandVolume = viewModel.TotalVolume;
+
+                var ranked = allTruckOps
+                    .Select(x => new SuggestedTruck
                     {
-                        viewModel.Truck = truck;
-                        viewModel.RemainingTruckTonnage = truck?.Tonnage ?? 0;
-                        viewModel.RemainingTruckVolume = truck?.Volume ?? 0;
+                        Truck = x.Truck,
+                        Rate = x.Operation.Rate,
+                        TotalRate = x.Operation.Rate * viewModel.TotalQuantity,
+                        TonnageFit = x.Truck.Tonnage - demandWeight,
+                        VolumeFit = x.Truck.Volume - demandVolume
+                    })
+                    .Where(x => x.TonnageFit >= 0 && x.VolumeFit >= 0) // only trucks that can carry the load
+                    .OrderBy(x => x.Rate)       // sort by the cheapest rate
+                    .ThenBy(x => x.TonnageFit) // then, minimize leftover tonnage
+                    .ThenBy(x => x.VolumeFit)   // then, minimize leftover volume
+                    .Take(3)
+                    .ToList();
 
-                        if (!string.IsNullOrEmpty(productCode))
-                        {
-                            var product = await _context.Products.FirstOrDefaultAsync(p => p.Code == productCode);
-                            if (product != null)
-                            {
-                                var loaded = new LoadedProduct
-                                {
-                                    Product = product,
-                                    Quantity = quantity,
-                                };
-                                viewModel.Products.Add(loaded);
-                                viewModel.RemainingTruckTonnage -= product.GrossWeight * quantity;
-                                viewModel.RemainingTruckVolume -= quantity / product.BoxPerPallet;
-                            }
-                        }
-                    }
-                }
+                viewModel.Trucks = ranked;
             }
         }
 

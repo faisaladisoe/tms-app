@@ -4,84 +4,122 @@
 
 @model Dashboard
 
-<div class="container mt-4">
+<h2>TMS Dashboard</h2>
 
-    <!-- Shipment Route Input -->
+<!-- Total Capacity -->
+<div class="bg-primary bg-gradient text-white p-3 rounded mb-3">
+    <div>
+        <strong>Total Tonnage:</strong> @Math.Round(@Model.TotalWeight, 3) kg(s)
+    </div>
+    <div>
+        <strong>Total Volume:</strong> @Math.Round(@Model.TotalVolume, 3) pallet(s)
+    </div>
+    <div>
+        <strong>Total Quantity:</strong> @Math.Round(@Model.TotalQuantity, 3) item(s)
+    </div>
+</div>
+
+<!-- Product Input -->
+<form method="post" asp-action="AddProduct" autocomplete="off">
+    <div class="form-group mb-3 d-flex">
+        <input type="text" name="productCode" class="form-control me-2" placeholder="Enter product code" />
+        <input type="number" name="quantity" class="form-control me-2"
+               placeholder="Qty" min="1" value="1" style="max-width:120px;" />
+        <button type="submit" class="btn btn-primary">Load Product</button>
+    </div>
+</form>
+
+@if (Model.Products.Any())
+{
+    <!-- Loaded Products -->
+    <h5>Loaded Products</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Code</th>
+                <th>Description</th>
+                <th>Size</th>
+                <th>Dimension</th>
+                <th>Box per pallet</th>
+                <th>Gross Weight</th>
+                <th>Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var p in Model.Products)
+            {
+                <tr>
+                    <td>@p.Product?.Code</td>
+                    <td>@p.Product?.Description</td>
+                    <td>@p.Product?.Size</td>
+                    <td>@p.Product?.Dimension</td>
+                    <td>@p.Product?.BoxPerPallet</td>
+                    <td>@p.Product?.GrossWeight</td>
+                    <td>@p.Quantity</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <!-- Route Input -->
     <form method="get" asp-action="Index" autocomplete="off">
         <div class="form-group mb-3">
             <label for="shipmentRoute" class="form-label fw-bold">Shipment Route:</label>
             <input type="text" id="shipmentRoute" name="shipmentRoute"
-                   class="form-control" placeholder="Select shipment route"
-                   list="routes" />
+                   class="form-control" placeholder="Select shipment route" />
         </div>
-        <button type="submit" class="btn btn-primary">Find The Cheapest Truck</button>
+        <button type="submit" class="btn btn-primary">Find Ideal Trucks</button>
     </form>
-    
-    @if (Model != null && Model.Truck != null)
-    {
-        <!-- Truck Info -->
-        <div class="bg-primary text-white mt-3 p-3 rounded mb-3">
-            <h5>Cheapest Truck Info</h5>
-            <ul>
-                <li><strong>Expedition:</strong> @Model.Truck.Expedition?.Name</li>
-                <li><strong>Type:</strong> @Model.Truck.Type</li>
-                <li><strong>Tonnage:</strong> @Model.Truck.Tonnage</li>
-                <li><strong>Volume:</strong> @Model.Truck.Volume</li>
-            </ul>
+}
+
+<!-- Suggested Trucks -->
+@if (Model.Trucks.Any())
+{
+    <!-- Shipment route info -->
+    <h5 class="mt-4">Shipment Route Info</h5>
+    <div class="bg-info bg-gradient text-white p-3 rounded mb-3">
+        <div>
+            <strong>Route:</strong> @Model.ShipmentRoute?.Name
         </div>
-
-        <!-- Remaining Capacity -->
-        <div class="bg-info text-white p-3 rounded mb-3">
-            <div>
-                <strong>Remaining Tonnage:</strong> @Model.RemainingTruckTonnage kg(s)
-            </div>
-            <div>
-                <strong>Remaining Volume:</strong> @Model.RemainingTruckVolume pallet(s)
-            </div>
+        <div>
+            <strong>Abbreviation:</strong> @Model.ShipmentRoute?.Abbr
         </div>
+        <div>
+            <strong>Total distance:</strong> @Model.ShipmentRoute?.Distance km
+        </div>
+    </div>
 
-        <!-- Product Input -->
-        <form method="get" asp-action="Index" autocomplete="off">
-            <input type="hidden" name="shipmentRoute" value="@Context.Request.Query["shipmentRoute"]" />
-            <div class="form-group mb-3 d-flex">
-                <input type="text" name="productCode" class="form-control me-2" placeholder="Enter product code" />
-                <input type="number" name="quantity" class="form-control me-2"
-                       placeholder="Qty" min="1" value="1" style="max-width:120px;" />
-                <button type="submit" class="btn btn-primary">Load Product</button>
-            </div>
-        </form>
-
-        <!-- Loaded Products -->
-        <h5>Loaded Products</h5>
-        <table class="table">
-            <thead>
+    <h5 class="mt-4">Suggested Trucks</h5>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Expedition</th>
+                <th>Type</th>
+                <th>Tonnage</th>
+                <th>Tonnage Fit</th>
+                <th>Volume</th>
+                <th>Volume Fit</th>
+                <th>Rate</th>
+                <th>Total Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var t in Model.Trucks)
+            {
                 <tr>
-                    <th>Code</th>
-                    <th>Description</th>
-                    <th>Size</th>
-                    <th>Dimension</th>
-                    <th>Box per pallet</th>
-                    <th>Gross Weight</th>
-                    <th>Quantity</th>
+                    <td>@t.Truck?.Expedition?.Name</td>
+                    <td>@t.Truck?.Type</td>
+                    <td>@t.Truck?.Tonnage</td>
+                    <td>@Math.Round(@t.TonnageFit, 3)</td>
+                    <td>@t.Truck?.Volume</td>
+                    <td>@Math.Round(@t.VolumeFit, 3)</td>
+                    <td>@t.Rate</td>
+                    <td>@t.TotalRate</td>
                 </tr>
-            </thead>
-            <tbody>
-                @foreach (var p in Model.Products)
-                {
-                    <tr>
-                        <td>@p.Product.Code</td>
-                        <td>@p.Product.Description</td>
-                        <td>@p.Product.Size</td>
-                        <td>@p.Product.Dimension</td>
-                        <td>@p.Product.BoxPerPallet</td>
-                        <td>@p.Product.GrossWeight</td>
-                        <td>@p.Quantity</td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    }
-</div>
+            }
+        </tbody>
+    </table>
+}
 
 @section Scripts {
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
