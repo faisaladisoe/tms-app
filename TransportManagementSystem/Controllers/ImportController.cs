@@ -27,6 +27,7 @@ namespace TransportManagementSystem.Controllers
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ImportAll(IFormFile file)
         {
             if (file == null || file.Length == 0)
@@ -47,9 +48,20 @@ namespace TransportManagementSystem.Controllers
             await file.CopyToAsync(stream);
             using var package = new ExcelPackage(stream);
 
-            var expeditions = ImportHelper.ReadSheet<Expedition>(package.Workbook.Worksheets["Expeditions"]);
-            var routes = ImportHelper.ReadSheet<Models.Route>(package.Workbook.Worksheets["Routes"]);
-            var products = ImportHelper.ReadSheet<Product>(package.Workbook.Worksheets["Products"]);
+            List<Expedition> expeditions = new List<Expedition>();
+            List<Models.Route> routes = new List<Models.Route>();
+            List<Product> products = new List<Product>();
+            try
+            {
+                expeditions = ImportHelper.ReadSheet<Expedition>(package.Workbook.Worksheets["Expeditions"]);
+                routes = ImportHelper.ReadSheet<Models.Route>(package.Workbook.Worksheets["Routes"]);
+                products = ImportHelper.ReadSheet<Product>(package.Workbook.Worksheets["Products"]);
+            }
+            catch
+            {
+                TempData["Error"] = "Invalid data format. There is either Expeditions, Routes, or Products sheet in your excel file.";
+                return RedirectToAction("Index");
+            }
 
             var errors = new List<string>();
             errors.AddRange(ImportValidator.Validate(expeditions, _context));
@@ -77,8 +89,18 @@ namespace TransportManagementSystem.Controllers
                 }
             }
 
-            var trucks = new List<Truck>();
-            var trucksDto = ImportHelper.ReadSheet<TruckImportDto>(package.Workbook.Worksheets["Trucks"]);
+            List<Truck> trucks = new List<Truck>();
+            List<TruckImportDto> trucksDto = new List<TruckImportDto>();
+            try
+            {
+                trucksDto = ImportHelper.ReadSheet<TruckImportDto>(package.Workbook.Worksheets["Trucks"]);
+            }
+            catch
+            {
+                TempData["Error"] = "Invalid data format. There is either Expeditions, Routes, or Products sheet in your excel file.";
+                return RedirectToAction("Index");
+            }
+            
             foreach (var dto in trucksDto)
             {
                 var expedition = _context.Expeditions.FirstOrDefault(e => e.Name == dto.ExpeditionName);

@@ -4,6 +4,30 @@
 
 <h2>Bulk Import</h2>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success mt-3">@TempData["Success"]</div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger mt-3">@TempData["Error"]</div>
+}
+@if (TempData["Errors"] != null)
+{
+    var errors = TempData["Errors"] as List<string>;
+    <div class="alert alert-danger mt-3">
+        @if (errors != null)
+        {
+            <ul>
+                @foreach (var err in errors)
+                {
+                    <li>@err</li>
+                }
+            </ul>
+        }
+    </div>
+}
+
 <!-- Import Form -->
 <form asp-action="ImportAll" asp-controller="Import" method="post" enctype="multipart/form-data">
     <div class="form-group">
@@ -30,28 +54,3 @@
         </form>
     </div>
 </div>
-
-
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success mt-3">@TempData["Success"]</div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger mt-3">@TempData["Error"]</div>
-}
-@if (TempData["Errors"] != null)
-{
-    var errors = TempData["Errors"] as List<string>;
-    <div class="alert alert-danger mt-3">
-        @if (errors != null)
-        {
-            <ul>
-                @foreach (var err in errors)
-                {
-                    <li>@err</li>
-                }
-            </ul>
-        }
-    </div>
-}
