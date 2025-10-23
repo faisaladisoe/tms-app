@@ -2,8 +2,48 @@
 
 namespace TransportManagementSystem.Helpers
 {
+    internal class FileValidation
+    {
+        public string Error { get; set; } = string.Empty;
+        public bool IsValid => Error.Length == 0;
+    }
+
     internal static class ImportValidator
     {
+        internal static FileValidation ValidateFile(IFormFile file)
+        {
+            const int MAX_FILE_SIZE = 1024 * 1024 * 5;      // 5 MB
+            FileValidation error = new();
+
+            // Ensure there's always an excel file.
+            if (file == null || file.Length == 0)
+            {
+                error.Error = "Please upload a valid Excel file.";
+                return error;
+            }
+
+            // Ensure upload a valid excel format.
+            string[] allowedExtensions = { ".xlsx", ".xls" };
+            if (file != null)
+            {
+                var extension = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!Array.Exists(allowedExtensions, item => item == extension))
+                {
+                    error.Error = "Only Excel files (.xlsx, .xls) are supported.";
+                    return error;
+                }
+            }
+
+            // Ensure a reasonable excel file size.
+            if (file != null && file.Length > MAX_FILE_SIZE)
+            {
+                error.Error = "The excel file size exceeds the maximum allowed size (5 MB)";
+                return error;
+            }
+
+            return error;
+        }
+
         internal static List<string> Validate<T>(IEnumerable<T> items, DbContext context) where T : class
         {
             var errors = new List<string>();

@@ -49,17 +49,10 @@ public class HomeController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> ImportData(IFormFile file)
     {
-        if (file == null || file.Length == 0)
+        FileValidation validation = ImportValidator.ValidateFile(file);
+        if (!validation.IsValid)
         {
-            TempData["Error"] = "Please upload a valid Excel file.";
-            return RedirectToAction("Index");
-        }
-
-        string[] allowedExtensions = { ".xlsx", ".xls" };
-        var extension = Path.GetExtension(file.FileName);
-        if (!Array.Exists(allowedExtensions, item => item == extension))
-        {
-            TempData["Error"] = "Only Excel files (.xlsx, .xls) are supported.";
+            TempData["Error"] = validation.Error;
             return RedirectToAction("Index");
         }
 
